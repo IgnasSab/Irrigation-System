@@ -1,0 +1,4 @@
+{
+    "sketch": "Test\\water_level.ino",
+    "board": "arduino:avr:uno"
+}
