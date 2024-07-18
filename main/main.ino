@@ -1,18 +1,16 @@
 // Non-local definitions & declarations:
 #include "src/State.h" 
-#include "src/components.h"
 #include "src/Controller.h"
-#include <LiquidCrystal_I2C.h>
 
+
+////////////////////////
+
+// controller.LCD Screen settings:
 // Constant definitions:
 #define second 1000
 #define minute 60000
 #define hour 3600000
 #define day 86400000
-////////////////////////
-
-// LCD Screen settings:
-LiquidCrystal_I2C lcd(0x27, 20, 4);
 //////////////////////////////////////////
 
 // LED settings:
@@ -25,7 +23,7 @@ LiquidCrystal_I2C lcd(0x27, 20, 4);
 // Joystick settings:
 #define pin_JOYSTICK_X A0
 #define pin_JOYSTICK_Y A1
-#define pin_JOYSTICK_BUTTON 1
+#define pin_JOYSTICK_BUTTON 2
 ///////////////////////////
 
 // Button settings:
@@ -35,24 +33,22 @@ LiquidCrystal_I2C lcd(0x27, 20, 4);
 
 // Global variables:
 State state;
-Joystick joystick(pin_JOYSTICK_X, pin_JOYSTICK_Y, pin_JOYSTICK_BUTTON);
-Buttons buttons(pin_BUTTON_GREEN, pin_BUTTON_YELLOW);
-LEDS leds(pin_LED_GREEN, pin_LED_YELLOW, pin_LED_BLUE, pin_LED_RED);
-Controller controller;
+Controller controller(pin_JOYSTICK_X, pin_JOYSTICK_Y, pin_JOYSTICK_BUTTON,
+    pin_LED_GREEN, pin_LED_YELLOW, pin_LED_BLUE, pin_LED_RED,
+    pin_BUTTON_GREEN, pin_BUTTON_YELLOW);
 ////////////////////
 
 
 // Function headers:
-void printStartingScreen();
-void printCursors();
+
 /////////////////////////////////////////////
 
 void setup() {
 
-    // LCD Screen setup:
-    lcd.init(); // initialize the lcd
-    lcd.backlight();
-    lcd.clear();
+    // controller.LCD Screen setup:
+    controller.lcd.init(); // initialize the controller.lcd
+    controller.lcd.backlight();
+    controller.lcd.clear();
 
     // Serial communication setup:
     Serial.begin(9600);
@@ -63,27 +59,27 @@ void setup() {
     Serial.println("START");
 
     // Setup the pins:
-    leds.setup();
-    
-    joystick.setup();
-
-    buttons.setup();
+    controller.leds.setup();
+    controller.joystick.setup();
+    controller.buttons.setup();
 
     // Display LCD:
-    printStartingScreen(); 
+    controller.printStartingScreen(state); 
 }
 
 
 void loop() {
 
-    joystick.readValues();
+    controller.joystick.readValues();
 
-    if (state.updateFutureState(joystick.joystick_x_val, joystick.joystick_y_val)) printStartingScreen();
-    if (joystick.isPressed()) state.updateCurrentState();
-    if (state.getCurrentState() != State::STARTING_SCREEN) {
+    if (state.updateFutureState(controller.joystick.joystick_x_val, controller.joystick.joystick_y_val)) controller.printStartingScreen(state);
+    if (controller.joystick.isPressed()) {
         state.updateCurrentState();
+    }
+    if (state.getCurrentState() != State::STARTING_SCREEN) {
         performAction();
         state.setCurrentState(State::STARTING_SCREEN);
+        controller.printStartingScreen(state);
     }
 
     delay(second);
@@ -106,45 +102,4 @@ void performAction() {
     }
 }
 
-void printStartingScreen()
-{
-    printCursors();
-    switch (state.getFutureState()) {
-        case State::QUICK_IRRIGATION:
-            lcd.setCursor(0, 0);
-            break;
-        case State::SET_IRRIGATION:
-            lcd.setCursor(8, 0);
-            break;
-        case State::CHECK_IRRIGATION:
-            lcd.setCursor(8, 1);
-            break;
-        case State::AUTOMATIC_IRRIGATION:
-            lcd.setCursor(0, 1);
-            break;
-    }
-    lcd.print("~");
-    lcd.setCursor(2, 0);
-    lcd.print("QUICK");
-    lcd.setCursor(2, 1);
-    lcd.print("AUTO.");
-    lcd.setCursor(10, 0);
-    lcd.print("SET TIME");
-    lcd.setCursor(10, 1);
-    lcd.print("CHECK TIME");
-    lcd.setCursor(3, 2);
-    lcd.print("Opening Screen");
-    lcd.setCursor(2, 3);
-    lcd.print("Navigate Options");
-}
 
-void printCursors() {
-    lcd.setCursor(0, 0);
-    lcd.print("}");
-    lcd.setCursor(0, 1);
-    lcd.print("}");
-    lcd.setCursor(8, 0);
-    lcd.print("}");
-    lcd.setCursor(8, 1);
-    lcd.print("}");
-}
