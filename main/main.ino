@@ -23,9 +23,9 @@ LiquidCrystal_I2C lcd(0x27, 20, 4);
 //////////////////////
 
 // Joystick settings:
-#define pin_JOYSTICK_X A0       
+#define pin_JOYSTICK_X A0
 #define pin_JOYSTICK_Y A1
-#define pin_JOYSTICK_BUTTON 2
+#define pin_JOYSTICK_BUTTON 1
 ///////////////////////////
 
 // Button settings:
@@ -86,7 +86,7 @@ void loop() {
         state.setCurrentState(State::STARTING_SCREEN);
     }
 
-    delay(second / 5);
+    delay(second);
 }
 
 void performAction() {
@@ -114,10 +114,10 @@ void printStartingScreen()
             lcd.setCursor(0, 0);
             break;
         case State::SET_IRRIGATION:
-            lcd.setCursor(7, 0);
+            lcd.setCursor(8, 0);
             break;
         case State::CHECK_IRRIGATION:
-            lcd.setCursor(7, 1);
+            lcd.setCursor(8, 1);
             break;
         case State::AUTOMATIC_IRRIGATION:
             lcd.setCursor(0, 1);
@@ -125,22 +125,26 @@ void printStartingScreen()
     }
     lcd.print("~");
     lcd.setCursor(2, 0);
-    lcd.print("Quick");
+    lcd.print("QUICK");
     lcd.setCursor(2, 1);
-    lcd.print("Automatic");
-    lcd.setCursor(2, 2);
-    lcd.print("Set Timer");
+    lcd.print("AUTO.");
+    lcd.setCursor(10, 0);
+    lcd.print("SET TIME");
+    lcd.setCursor(10, 1);
+    lcd.print("CHECK TIME");
+    lcd.setCursor(3, 2);
+    lcd.print("Opening Screen");
     lcd.setCursor(2, 3);
-    lcd.print("Check timer");
+    lcd.print("Navigate Options");
 }
 
 void printCursors() {
     lcd.setCursor(0, 0);
-    lcd.print("{");
+    lcd.print("}");
     lcd.setCursor(0, 1);
-    lcd.print("{");
-    lcd.setCursor(0, 2);
-    lcd.print("{");
-    lcd.setCursor(0, 3);
-    lcd.print("{");
+    lcd.print("}");
+    lcd.setCursor(8, 0);
+    lcd.print("}");
+    lcd.setCursor(8, 1);
+    lcd.print("}");
 }

@@ -76,6 +76,7 @@ bool State::changeFutureState(Direction direction) {
         case AUTOMATIC_IRRIGATION:
             switch(direction) {
                 case UP:
+                    this->future_state = QUICK_IRRIGATION;
                     changed = true;
                     break;
                 case DOWN:
@@ -93,16 +94,15 @@ bool State::changeFutureState(Direction direction) {
 }
 
 bool State::updateFutureState(int joystick_x_val, int joystick_y_val) {  
-    
     int changed = false;
     if (joystick_x_val < 580 && joystick_x_val > 420 && joystick_y_val < 580 && joystick_y_val > 420) {
-        // do nothing
+        // Do nothing
     } else if (joystick_x_val < 580 && joystick_x_val > 420) {
         if (joystick_y_val < 420) {
-            Direction direction = DOWN; // TODO
+            Direction direction = UP; // TODO
             changed = changeFutureState(direction);
         } else { // joystick_y_val > 580
-            Direction direction = UP; // TODO
+            Direction direction = DOWN; // TODO
             changed = changeFutureState(direction);
         }
     } else { // joystick_y_val < 580 && joystick_y_val > 420

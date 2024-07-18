@@ -1,4 +1,5 @@
 {
-    "sketch": "Test\\water_level.ino",
-    "board": "arduino:avr:uno"
+    "sketch": "main\\main.ino",
+    "board": "arduino:avr:yun",
+    "port": "COM7"
 }
