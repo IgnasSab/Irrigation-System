@@ -39,6 +39,9 @@ bool State::changeFutureState(Direction direction) {
                     this->future_state = SET_IRRIGATION;
                     changed = true;
                     break;
+                case NEUTRAL:
+                    // DO NOTHING
+                    break;
             }
             break;
         case SET_IRRIGATION:
@@ -55,6 +58,10 @@ bool State::changeFutureState(Direction direction) {
                     break;
                 case RIGHT:
                     break;
+                case NEUTRAL:
+                    // DO NOTHING
+                    break;
+
             }
             break;
         case CHECK_IRRIGATION:
@@ -71,6 +78,10 @@ bool State::changeFutureState(Direction direction) {
                     break;
                 case RIGHT:
                     break;
+                case NEUTRAL:
+                    // DO NOTHING
+                    break;
+
             }
             break;
         case AUTOMATIC_IRRIGATION:
@@ -87,6 +98,10 @@ bool State::changeFutureState(Direction direction) {
                     this->future_state = CHECK_IRRIGATION;
                     changed = true;
                     break;
+                case NEUTRAL:
+                    // DO NOTHING
+                    break;
+
             }
             break;
     }

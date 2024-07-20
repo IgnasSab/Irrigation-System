@@ -3,48 +3,59 @@
 #include <Arduino.h>
 #include <LiquidCrystal_I2C.h>
 #include "State.h"
-#include "components.h"
+#include "Components.h"
+#define int uint32_t
 
 // Constant definitions:
 #define second 1000
 #define minute 60000
 #define hour 3600000
 #define day 86400000
+#define global_delay 250
 
 enum Time_state {
     DAYS, 
     HOURS
 };
 
-
 class Timer {
     public:    
         Timer();
-        void updateTime(int time_diff);
-        static const int timer_count = 4; // Hardcoded value
-        int time_left[timer_count];
-        bool timer_mask[timer_count];
+        bool updateTime(int time_diff);
+        static const int time_count = 4; // Hardcoded value
+        int time_left[time_count];
+        bool time_mask[time_count];
+        bool isFull();
 
 };
 
-
 class Controller {
     public:
-        Controller(int pin_JOYSTICK_X, int pin_JOYSTICK_Y, int pin_JOYSTICK_BUTTON,
-    int pin_LED_GREEN, int pin_LED_YELLOW, int pin_LED_BLUE, int pin_LED_RED,
-    int pin_BUTTON_GREEN, int pin_BUTTON_YELLOW);
-        void update(int delay);
+        Controller();
+        bool update(int inner_delay = global_delay, bool do_delay = true);
+
         void quickIrrigation();
         void setIrrigation();
         void checkIrrigation();
         void automaticIrrigation();
-        void printStartingScreen(State& state);
+
+        void printCheckScreen();
+        void setup();
+        void printStartingScreen(State& state, bool first = false);
+
+        void waitForRelease();
+
         LiquidCrystal_I2C lcd;
         Joystick joystick;
         Buttons buttons;
         LEDS leds;
+        Moisture moisture;
+        Irrigation irrigation;
+        WaterLevel water_level;
     private:
+        void irrigate();
         void printCursors();
         Timer timer;
         bool automatic_irrigation;
+
 };

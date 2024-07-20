@@ -1,8 +1,6 @@
-#include "components.h"
+#include "Components.h"
 
-Buttons::Buttons(int pin_BUTTON_GREEN, int pin_BUTTON_YELLOW) {
-    this->pin_BUTTON_GREEN = pin_BUTTON_GREEN;
-    this->pin_BUTTON_YELLOW = pin_BUTTON_YELLOW;
+Buttons::Buttons() {
 }
 
 void Buttons::setup() {
@@ -14,5 +12,5 @@ Buttons::isGreenPressed() {
     return digitalRead(this->pin_BUTTON_GREEN);
 }
 Buttons::isYellowPressed() {
-    return digitalRead(this->pin_BUTTON_YELLOW);
+    return !digitalRead(this->pin_BUTTON_YELLOW);
 }

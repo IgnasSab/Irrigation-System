@@ -1,89 +1,55 @@
 // Non-local definitions & declarations:
 #include "src/State.h" 
 #include "src/Controller.h"
-
-
-////////////////////////
-
-// controller.LCD Screen settings:
-// Constant definitions:
-#define second 1000
-#define minute 60000
-#define hour 3600000
-#define day 86400000
-//////////////////////////////////////////
-
-// LED settings:
-#define pin_LED_RED 8
-#define pin_LED_BLUE 9
-#define pin_LED_GREEN 10
-#define pin_LED_YELLOW 13
-//////////////////////
-
-// Joystick settings:
-#define pin_JOYSTICK_X A0
-#define pin_JOYSTICK_Y A1
-#define pin_JOYSTICK_BUTTON 2
-///////////////////////////
-
-// Button settings:
-#define pin_BUTTON_GREEN 6
-#define pin_BUTTON_YELLOW 7
-/////////////////////////
+///////////////////////////////////////
 
 // Global variables:
 State state;
-Controller controller(pin_JOYSTICK_X, pin_JOYSTICK_Y, pin_JOYSTICK_BUTTON,
-    pin_LED_GREEN, pin_LED_YELLOW, pin_LED_BLUE, pin_LED_RED,
-    pin_BUTTON_GREEN, pin_BUTTON_YELLOW);
-////////////////////
+Controller controller;
+//////////////////////
 
 
 // Function headers:
-
-/////////////////////////////////////////////
-
+void performAction();
+/////////////////////
+    
 void setup() {
-
-    // controller.LCD Screen setup:
-    controller.lcd.init(); // initialize the controller.lcd
-    controller.lcd.backlight();
-    controller.lcd.clear();
 
     // Serial communication setup:
     Serial.begin(9600);
     Serial.setTimeout(10);
 
+    // Setup all of the components:
+    controller.setup();
 
     // Signify the start of the program: 
     Serial.println("START");
 
-    // Setup the pins:
-    controller.leds.setup();
-    controller.joystick.setup();
-    controller.buttons.setup();
-
     // Display LCD:
-    controller.printStartingScreen(state); 
+    controller.printStartingScreen(state, true); 
 }
 
 
 void loop() {
 
-    controller.joystick.readValues();
-
-    if (state.updateFutureState(controller.joystick.joystick_x_val, controller.joystick.joystick_y_val)) controller.printStartingScreen(state);
-    if (controller.joystick.isPressed()) {
-        state.updateCurrentState();
+    Direction joystick_direction = controller.joystick.getDirection();
+    if (state.changeFutureState(joystick_direction)) { // Wait for a change 
+        controller.printStartingScreen(state); // Move cursor in the menu
+    } else if (controller.joystick.isPressed()) {
+        controller.waitForRelease();
+        state.updateCurrentState(); // Go to other state
     }
-    if (state.getCurrentState() != State::STARTING_SCREEN) {
-        performAction();
-        state.setCurrentState(State::STARTING_SCREEN);
-        controller.printStartingScreen(state);
+    if (state.getCurrentState() != State::STARTING_SCREEN) { // Check if state is different than menu
+        performAction(); // Do an action corresponding to the state you are in
+        state.setCurrentState(State::STARTING_SCREEN); // Go back to menu
+        controller.printStartingScreen(state, true); // Print menu (starting screen)
     }
-
-    delay(second);
+    bool irrigated = controller.update(); // Make all components up do date 
+    if (irrigated == true) {
+        controller.printStartingScreen(state, true); // Print menu (starting screen)
+    }
 }
+
 
 void performAction() {
     switch(state.getCurrentState()) {

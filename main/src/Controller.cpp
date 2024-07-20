@@ -1,75 +1,157 @@
 #include "Controller.h"
 
-Timer::Timer() {
-    for (int i = 0; i < this->timer_count; i++) {
-        this->time_left[i] = 0;    
-        this->timer_mask[i] = false;    
+void Controller::waitForRelease() {
+    while(this->joystick.isPressed()) {
+        this->update();
     }
 }
 
+Timer::Timer() {
+    for (int i = 0; i < this->time_count; i++) {
+        this->time_left[i] = 0;    
+        this->time_mask[i] = false;    
+    }
+}
 
-Controller::Controller(int pin_JOYSTICK_X, int pin_JOYSTICK_Y, int pin_JOYSTICK_BUTTON, 
-    int pin_LED_GREEN, int pin_LED_YELLOW, int pin_LED_BLUE, int pin_LED_RED, int pin_BUTTON_GREEN, int pin_BUTTON_YELLOW) 
-    : lcd(0x27, 20, 4),
-      joystick(pin_JOYSTICK_X, pin_JOYSTICK_Y, pin_JOYSTICK_BUTTON), 
-      buttons(pin_BUTTON_GREEN, pin_BUTTON_YELLOW), 
-      leds(pin_LED_GREEN, pin_LED_YELLOW, pin_LED_BLUE, pin_LED_RED) {
-    
+void Controller::setup() {
+    this->lcd.init();
+    this->lcd.backlight();
+    this->lcd.clear();
+    this->leds.setup();
+    this->joystick.setup();
+    this->buttons.setup();
+    this->irrigation.setup();
+}
+
+void Controller::irrigate() {
+    int update_delay = this->irrigation.getIrrigationDelay();
+    if (!this->water_level.isTooLow()) {
+        
+        this->irrigation.openValve(); 
+        this->lcd.clear();
+        this->lcd.setCursor(3, 0);
+        this->lcd.print("OPENING VALVES");
+        delay(second);
+        
+        this->lcd.clear();
+        this->lcd.setCursor(4, 0);
+        this->lcd.print("IRRIGATING");
+        delay(this->irrigation.getIrrigationDelay() > 2 * second ? this->irrigation.getIrrigationDelay() - 2 * second : 0);
+        
+        this->irrigation.closeValve();
+
+        this->lcd.clear();
+        this->lcd.setCursor(3, 0);
+        this->lcd.print("CLOSING VALVES");
+        delay(second);
+
+
+    } else {
+        this->lcd.clear();
+        this->lcd.setCursor(2, 0);
+        this->lcd.print("Not enough water");
+        delay(second);
+        update_delay = second;
+    }
+    this->update(update_delay, false);
+}
+
+Controller::Controller() : lcd(0x27, 20, 4) {
     this->automatic_irrigation = false;
 }
 
-void Controller::update(int delay) {
-    this->timer.updateTime(delay);
-
+bool Controller::update(int inner_delay = global_delay, bool do_delay = true) {
+    
+    if (do_delay) {
+        delay(inner_delay);
+    }
+    if (this->timer.updateTime(inner_delay) || 
+        this->moisture.lowMoisture()) {
+        this->irrigate();
+        return true;
+    }
+    return false;
 }
 
-void Timer::updateTime(int time_diff) {
-    for (int i = 0; i < this->timer_count; i++) {
-        if (timer_mask[i] == false) {
+bool Timer::updateTime(int time_diff) {
+    for (int i = 0; i < this->time_count; i++) {
+        if (this->time_mask[i] == false) {
             continue;
-        } else if (time_left[i] > 0) { // If timer is set
+        } else if (this->time_left[i] > 0) { // If timer is set
+            Serial.println(time_left[i]);
             time_left[i] -= time_diff;
         } else {
-            time_left[i] = 0;
-            timer_mask[i] = false;
-            Serial.println("Irrigating...");
+            this->time_left[i] = 0;
+            this->time_mask[i] = false;
+            return true;
         }
     }
+    return false;
+}
+
+bool Timer::isFull() {
+    int count = 0;
+    for (int i = 0; i < this->time_count; i++) {
+        count += this->time_mask[i];
+    }
+    return count == this->time_count;
 }
 
 
 void Controller::quickIrrigation() { // TODO
-    this->lcd.clear();
-    this->lcd.setCursor(3, 0);
-    this->lcd.print("OPENING VALVES");
-    delay(3 * second);
-    this->lcd.setCursor(3, 0);
-    this->lcd.print("CLOSING VALVES");
-    delay(3 * second);
+    this->irrigate();
+}
+
+void sort(int time_left[], bool time_mask[], int size) {
+    // Perform bubble sort
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size - 1; j++) {
+            if (time_left[j] < time_left[j + 1]) {
+                int temp = time_left[j];
+                time_left[j] = time_left[j + 1];
+                time_left[j + 1] = temp;
+            }
+        }
+    }
+    for (int i = 0; i < size; i++) {
+        time_mask[i] = time_left[i] > 0; 
+    }
+
 }
 
 void Controller::setIrrigation() { // TODO
+
+    lcd.clear(); 
+    if (timer.isFull()) {
+        lcd.setCursor(2, 0);
+        lcd.print("Limit is reached");
+        this->update(second);
+        return;
+    }
+
     Time_state time_state = DAYS;
     int days = 0;
     int hours = 0;
-    lcd.clear(); 
     lcd.setCursor(2, 0);
     lcd.print("Fix day and hour");
-    while( true ) {
+    Direction joystick_direction = NEUTRAL;
+    while( !buttons.isYellowPressed() ) {
+        joystick_direction = joystick.getDirection();
         switch (time_state) {
             case DAYS:
                 lcd.setCursor(6, 3);
                 lcd.print("^^");
                 lcd.setCursor(10, 3);
                 lcd.print("  ");
-                if (this->joystick.joystick_y_val < 420 || this->joystick.joystick_y_val > 580) {
-                    if (this->joystick.joystick_y_val < 420) {
+                if ((joystick_direction == UP || joystick_direction == DOWN)
+                    && joystick_direction != LEFT && joystick_direction != RIGHT) {
+                    if (joystick_direction == UP) {
                         days = (days < 10 ? days + 1 : days);
-                    } else if (this->joystick.joystick_y_val > 520) {
+                    } else {
                         days = (days > 0 ? days - 1 : days);
                     } 
                     break;
-                } else if (this->joystick.joystick_x_val > 580) {
+                } else if (joystick_direction == RIGHT) {
                     time_state = HOURS;
                     break;
                 }
@@ -79,14 +161,15 @@ void Controller::setIrrigation() { // TODO
                 lcd.print("  ");
                 lcd.setCursor(10, 3);
                 lcd.print("^^");
-                if (this->joystick.joystick_y_val < 420 || this->joystick.joystick_y_val > 580) {
-                    if (this->joystick.joystick_y_val < 420) {
+                if ((joystick_direction == UP || joystick_direction == DOWN)
+                    && joystick_direction != LEFT && joystick_direction != RIGHT) {
+                    if (joystick_direction == UP) {
                         hours = (hours < 23 ? hours+ 1 : hours);
-                    } else if (this->joystick.joystick_y_val > 520) {
-                        hours= (hours> 0 ? hours - 1 : hours);
+                    } else {
+                        hours = (hours> 0 ? hours - 1 : hours);
                     } 
                     break;
-                } else if (this->joystick.joystick_x_val < 420) {
+                } else if (joystick_direction == LEFT) {
                     time_state = DAYS;
                     break;
                 }
@@ -96,30 +179,148 @@ void Controller::setIrrigation() { // TODO
         lcd.setCursor(6, 2);
         lcd.print((days < 10 ? "0" + String(days) : String(days)) + "::" + (hours < 10 ? "0" + String(hours) : String(hours)));
 
-        delay(second);
-        if (joystick.isPressed()) break;
-        joystick.readValues();
-    }
-    
-    for (int i = 0; i < this->timer.timer_count; i++) {
-        if (timer.timer_mask[i] == false) {
-            timer.time_left[i] = day * days + hour * hours; 
+        if (joystick.isPressed() && (days != 0 || hours != 0)) {
+            this->waitForRelease();
+            for (int i = 0; i < this->timer.time_count; i++) {
+                if (this->timer.time_mask[i] == false) {
+                    this->timer.time_left[i] = day * days + hour * hours;
+                    this->timer.time_mask[i] = true; 
+                    break;
+                }
+            }
+            break;
         }
+        this->update();
     }
+
+
+
+    sort(this->timer.time_left, this->timer.time_mask, this->timer.time_count);
 
 }   
 
+void Controller::printCheckScreen() {
+    int i = 0;
+    while (i < this->timer.time_count && this->timer.time_mask[i] == true) {
+        this->lcd.setCursor(1, i);
+        this->lcd.print(String(i + 1) + ".");
+        this->lcd.setCursor(4, i);
+        this->lcd.print("Days:" + String(this->timer.time_left[i] / day) + " Hours:" + String((this->timer.time_left[i] % day) / hour));
+        i++;
+    }
+}
+
 void Controller::checkIrrigation() { // TODO
+    int occupied = 0;
+    int pointer = 0;
+    for (int i = 0; i < timer.time_count; i++) {
+        occupied += timer.time_mask[i];
+    }
+    lcd.clear();
+    if (occupied == 0) {
+        lcd.setCursor(5, 0);
+        lcd.print("Empty list");
+        this->update(second);
+        return;
+    } else {
+        lcd.setCursor(0, 0);
+        lcd.print("~");
+    }
+    Direction joystick_direction = NEUTRAL;
+    printCheckScreen();
+    while ( !buttons.isYellowPressed() ) {
+        if ((joystick_direction == UP || joystick_direction == DOWN)
+            && joystick_direction != LEFT && joystick_direction != RIGHT) {
+            lcd.setCursor(0, pointer);
+            lcd.print(" ");
+            if (joystick_direction == UP) {
+                pointer = (pointer > 0 ? pointer - 1 : pointer);
+            } else {
+                pointer = (pointer < occupied - 1 ? pointer + 1 : pointer);
+            } 
+            lcd.setCursor(0, pointer);
+            lcd.print("~");
+        } else if (this->joystick.isPressed()) {
+            this->waitForRelease();
+            occupied = (occupied > 0 ? occupied - 1 : 0);
+            this->timer.time_left[pointer] = 0;
+            this->timer.time_mask[pointer] = false;
+            sort(this->timer.time_left, this->timer.time_mask, this->timer.time_count);
+
+            this->lcd.clear();
+            if (occupied == 0) {
+                lcd.setCursor(5, 0);
+                lcd.print("Empty list");
+                this->update(second);
+                return;
+            } else {
+                pointer = 0;
+                lcd.setCursor(0, pointer);
+                lcd.print("~");
+            }
+            printCheckScreen();
+        }
+ 
+        this->update();
+        joystick_direction = joystick.getDirection();
+    }
 
 }
 
 void Controller::automaticIrrigation() { // TODO
-    this->automatic_irrigation = !this->automatic_irrigation;
+    lcd.clear();
+    int automatic = this->automatic_irrigation;
+    if (automatic == true) {
+        lcd.setCursor(2, 0);
+        lcd.print("Automatic is ON");
+        lcd.setCursor(0, 2);
+        lcd.print("Press to turn it OFF");
+    } else {
+        lcd.setCursor(2, 0);
+        lcd.print("Automatic is OFF");
+        lcd.setCursor(0, 2);
+        lcd.print("Press to turn it ON");
+    }
+    while ( !buttons.isYellowPressed() ) {
+        if (joystick.isPressed()) {
+            this->waitForRelease();
+            automatic = !automatic;
+            lcd.clear();
+            if (automatic == true) {
+                lcd.setCursor(2, 0);
+                lcd.print("Automatic is ON");
+                lcd.setCursor(0, 2);
+                lcd.print("Press to turn it OFF");
+            } else {
+                lcd.setCursor(2, 0);
+                lcd.print("Automatic is OFF");
+                lcd.setCursor(0, 2);
+                lcd.print("Press to turn it ON");
+            }
+        }  
+        this->update();
+    }
+    this->automatic_irrigation = automatic;
+
 }
 
-void Controller::printStartingScreen(State& state)
+void Controller::printStartingScreen(State& state, bool first = false)
 {
-    this->lcd.clear();
+    if (first) {
+        this->lcd.clear();
+        this->lcd.setCursor(2, 0);
+        this->lcd.print("QUICK");
+        this->lcd.setCursor(2, 1);
+        this->lcd.print("AUTO.");
+        this->lcd.setCursor(10, 0);
+        this->lcd.print("SET TIME");
+        this->lcd.setCursor(10, 1);
+        this->lcd.print("CHECK TIME");
+        this->lcd.setCursor(3, 2);
+        this->lcd.print("Opening Screen");
+        this->lcd.setCursor(2, 3);
+        this->lcd.print("Navigate Options");
+    }
     printCursors();
     switch (state.getFutureState()) {
         case State::QUICK_IRRIGATION:
@@ -136,18 +337,6 @@ void Controller::printStartingScreen(State& state)
             break;
     }
     this->lcd.print("~");
-    this->lcd.setCursor(2, 0);
-    this->lcd.print("QUICK");
-    this->lcd.setCursor(2, 1);
-    this->lcd.print("AUTO.");
-    this->lcd.setCursor(10, 0);
-    this->lcd.print("SET TIME");
-    this->lcd.setCursor(10, 1);
-    this->lcd.print("CHECK TIME");
-    this->lcd.setCursor(3, 2);
-    this->lcd.print("Opening Screen");
-    this->lcd.setCursor(2, 3);
-    this->lcd.print("Navigate Options");
 }
 
 void Controller::printCursors() {

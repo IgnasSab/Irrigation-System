@@ -1,10 +1,7 @@
-#include "components.h"
+#include "Components.h"
 
-LEDS::LEDS(int pin_LED_GREEN, int pin_LED_YELLOW, int pin_LED_BLUE, int pin_LED_RED) {
-    this->pin_LED_GREEN = pin_LED_GREEN;
-    this->pin_LED_YELLOW = pin_LED_YELLOW;
-    this->pin_LED_BLUE = pin_LED_BLUE;
-    this->pin_LED_RED = pin_LED_RED;
+LEDS::LEDS() {
+
 }
 
 void LEDS::setup() {
@@ -12,6 +9,8 @@ void LEDS::setup() {
     pinMode(this->pin_LED_BLUE, OUTPUT);
     pinMode(this->pin_LED_GREEN, OUTPUT);
     pinMode(this->pin_LED_YELLOW, OUTPUT);
+
+
 }
 
 void LEDS::greenOn() {
