@@ -26,6 +26,7 @@ class Timer {
         int time_left[time_count];
         bool time_mask[time_count];
         bool isFull();
+        bool isEmpty();
 
 };
 
@@ -53,9 +54,11 @@ class Controller {
         Irrigation irrigation;
         WaterLevel water_level;
     private:
+        void setLEDs();
         void irrigate();
         void printCursors();
         Timer timer;
         bool automatic_irrigation;
+        int iterations;
 
 };

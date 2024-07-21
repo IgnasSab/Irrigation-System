@@ -57,6 +57,7 @@ class LEDS {
         void blueOff();
         void redOn();
         void redOff();
+        bool blink_state;
 };
 
 class Moisture {
@@ -84,9 +85,11 @@ class Irrigation {
 class WaterLevel {
     public:
         WaterLevel();
+        void setup()
         bool isTooLow();
     private:
-        const static int pin_WATER_LEVEL;
+        const static int pin_WATER_LEVEL = A0;
+        const static int water_level_threshold = 900;
 };
 
 #endif

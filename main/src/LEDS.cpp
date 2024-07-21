@@ -1,7 +1,10 @@
 #include "Components.h"
 
 LEDS::LEDS() {
-
+    greenOff();
+    blueOff();
+    yellowOff();
+    redOff();
 }
 
 void LEDS::setup() {
@@ -9,6 +12,13 @@ void LEDS::setup() {
     pinMode(this->pin_LED_BLUE, OUTPUT);
     pinMode(this->pin_LED_GREEN, OUTPUT);
     pinMode(this->pin_LED_YELLOW, OUTPUT);
+
+    this->blink_state = true;
+
+    greenOff();
+    blueOff();
+    yellowOff();
+    redOff();
 
 
 }
