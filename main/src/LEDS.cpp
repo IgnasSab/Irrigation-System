@@ -1,10 +1,8 @@
 #include "Components.h"
 
 LEDS::LEDS() {
-    greenOff();
-    blueOff();
-    yellowOff();
-    redOff();
+
+
 }
 
 void LEDS::setup() {
@@ -19,6 +17,11 @@ void LEDS::setup() {
     blueOff();
     yellowOff();
     redOff();
+
+    // greenOn();
+    // blueOn();
+    // yellowOn();
+    // redOn();
 
 
 }

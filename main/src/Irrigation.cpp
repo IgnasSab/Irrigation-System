@@ -10,12 +10,12 @@ void Irrigation::setup() {
 }
 
 void Irrigation::openValve() {
-    digitalWrite(this->pin_IRRIGATION, HIGH);
+    digitalWrite(this->pin_IRRIGATION, LOW  );
 }
 
 void Irrigation::closeValve() {
     
-    digitalWrite(this->pin_IRRIGATION, LOW);
+    digitalWrite(this->pin_IRRIGATION, HIGH);
 }
 
 Irrigation::getIrrigationDelay() {

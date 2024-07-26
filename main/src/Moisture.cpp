@@ -8,6 +8,5 @@ void Moisture::setup() {
 }
 
 bool Moisture::lowMoisture() {
-    return false;
-    // return analogRead(this->pin_MOISTURE_LEVEL) > this->threshold;
+    return analogRead(this->pin_MOISTURE_LEVEL) > this->threshold;
 } 

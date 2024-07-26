@@ -20,19 +20,19 @@ Direction Joystick::getDirection() {
 }
 
 bool Joystick::left() {
-    return this->joystick_x_val < 200; 
-}
-
-bool Joystick::right() {
     return this->joystick_x_val > 800; 
 }
 
+bool Joystick::right() {
+    return this->joystick_x_val < 200; 
+}
+
 bool Joystick::up() {
-    return this->joystick_y_val < 200; 
+    return this->joystick_y_val > 800; 
 }
 
 bool Joystick::down() {
-    return this->joystick_y_val > 800; 
+    return this->joystick_y_val < 200; 
 }
 
 void Joystick::readValues() {

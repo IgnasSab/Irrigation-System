@@ -1,7 +1,7 @@
 {
-    "sketch": "Test\\water_level\\water_level.ino",
+    "sketch": "main\\main.ino",
     "board": "arduino:avr:nano",
     "port": "COM13",
-    "programmer": "avrisp",
+    "programmer": "arduinoasisp",
     "configuration": "cpu=atmega328"
 }

@@ -28,7 +28,6 @@ class State {
         void setCurrentState(State_enum future_state);
         bool changeFutureState(Direction direction);
         void updateCurrentState();
-        bool updateFutureState(int joystick_x_val, int joystick_y_val);
         ~State();
     private:
         State_enum current_state;

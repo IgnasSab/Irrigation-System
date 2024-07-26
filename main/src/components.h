@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include "State.h"
 #define second 1000
+#define irrigation_delay_def 20 * second
 
 class Joystick {
     public:
@@ -17,9 +18,9 @@ class Joystick {
         bool right();
         bool up();
         bool down();
-        const static int pin_JOYSTICK_X = A1;
-        const static int pin_JOYSTICK_Y = A2;
-        const static int pin_JOYSTICK_BUTTON = 2;
+        const static int pin_JOYSTICK_X = A6;
+        const static int pin_JOYSTICK_Y = A7;
+        const static int pin_JOYSTICK_BUTTON = 8;
         int joystick_x_val;
         int joystick_y_val;
         int joystick_button_val;
@@ -29,11 +30,9 @@ class Joystick {
 
 class Buttons {
     private:
-        const static int pin_BUTTON_GREEN = 6;
-        const static int pin_BUTTON_YELLOW = 3;
+        const static int pin_BUTTON_YELLOW = 9;
     public:
         Buttons();
-        isGreenPressed();
         isYellowPressed();
         void setup();
 
@@ -42,9 +41,9 @@ class Buttons {
 
 class LEDS {
     private:
-        const static int pin_LED_RED = 8;
-        const static int pin_LED_BLUE = 9;
-        const static int pin_LED_GREEN = 10;
+        const static int pin_LED_RED = 10;
+        const static int pin_LED_BLUE = 11;
+        const static int pin_LED_GREEN = 2;
         const static int pin_LED_YELLOW = 12;
     public:
         LEDS();
@@ -66,7 +65,7 @@ class Moisture {
         void setup();
         bool lowMoisture();
     private:
-        const static int pin_MOISTURE_LEVEL = A3;
+        const static int pin_MOISTURE_LEVEL = A0;
         const static int threshold = 800;
 };
 
@@ -78,17 +77,17 @@ class Irrigation {
         void openValve();
         void closeValve();
     private:
-        const static int pin_IRRIGATION = 7;
-        const static int irrigation_delay = 5 * second;
+        const static int pin_IRRIGATION = 4;
+        const static int irrigation_delay = irrigation_delay_def;
 };
 
 class WaterLevel {
     public:
         WaterLevel();
-        void setup()
+        void setup();
         bool isTooLow();
     private:
-        const static int pin_WATER_LEVEL = A0;
+        const static int pin_WATER_LEVEL = A3;
         const static int water_level_threshold = 900;
 };
 

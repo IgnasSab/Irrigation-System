@@ -108,30 +108,6 @@ bool State::changeFutureState(Direction direction) {
     return changed;
 }
 
-bool State::updateFutureState(int joystick_x_val, int joystick_y_val) {  
-    int changed = false;
-    if (joystick_x_val < 580 && joystick_x_val > 420 && joystick_y_val < 580 && joystick_y_val > 420) {
-        // Do nothing
-    } else if (joystick_x_val < 580 && joystick_x_val > 420) {
-        if (joystick_y_val < 420) {
-            Direction direction = UP; // TODO
-            changed = changeFutureState(direction);
-        } else { // joystick_y_val > 580
-            Direction direction = DOWN; // TODO
-            changed = changeFutureState(direction);
-        }
-    } else { // joystick_y_val < 580 && joystick_y_val > 420
-        if (joystick_x_val < 420) {
-            Direction direction = LEFT; // TODO
-            changed = changeFutureState(direction);
-        } else { // joystick_y_val > 580
-            Direction direction = RIGHT; // TODO
-            changed = changeFutureState(direction);
-        }
-    }
-    return changed;
-}
-
 
 void State::updateCurrentState() {
     this->current_state = this->future_state;

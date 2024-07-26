@@ -28,13 +28,13 @@ void Controller::irrigate() {
     if (!this->water_level.isTooLow()) {
         
 
+        this->leds.greenOn();
         this->irrigation.openValve(); 
         this->lcd.clear();
         this->lcd.setCursor(3, 0);
-        this->lcd.print("OPENING VALVES");
+        this->lcd.print("STARTING PUMP");
         delay(second);
         
-        this->leds.greenOn();
         this->lcd.clear();
         this->lcd.setCursor(4, 0);
         this->lcd.print("IRRIGATING");
@@ -42,11 +42,11 @@ void Controller::irrigate() {
         
         this->irrigation.closeValve();
 
-        this->leds.greenOff();
         this->lcd.clear();
         this->lcd.setCursor(3, 0);
-        this->lcd.print("CLOSING VALVES");
+        this->lcd.print("STOPPING PUMP");
         delay(second);
+        this->leds.greenOff();
 
 
 
@@ -66,16 +66,16 @@ Controller::Controller() : lcd(0x27, 20, 4) {
 }
 
 void Controller::setLEDs() {
-    Serial.print(iterations);
-    Serial.println(" " + String(this->timer.isEmpty()));
-    if (iterations % 4 == 0 && !this->timer.isEmpty()) {
+    if (this->timer.isEmpty()) {
+        this->leds.yellowOff();
+    } else if (iterations % 4 == 0) {
         if (this->leds.blink_state == true) {
             this->leds.yellowOn();
         } else {
             this->leds.yellowOff();
         }
         this->leds.blink_state = !this->leds.blink_state;
-    }
+    } 
 
     if (this->water_level.isTooLow()) {
         this->leds.redOn();
@@ -89,7 +89,7 @@ bool Controller::update(int inner_delay = global_delay, bool do_delay = true) {
 
     this->setLEDs();
 
-    iterations++;
+    iterations += inner_delay / global_delay;
 
     if (do_delay) {
         delay(inner_delay);
@@ -125,7 +125,7 @@ bool Timer::updateTime(int time_diff) {
         if (this->time_mask[i] == false) {
             continue;
         } else if (this->time_left[i] > 0) { // If timer is set
-            time_left[i] -= time_diff;
+            this->time_left[i] -= time_diff;
         } else {
             this->time_left[i] = 0;
             this->time_mask[i] = false;
@@ -297,11 +297,11 @@ void Controller::checkIrrigation() { // TODO
                 this->lcd.setCursor(0, pointer);
                 this->lcd.print("~");
             }
-            printCheckScreen();
         }
  
         this->update();
         joystick_direction = this->joystick.getDirection();
+        printCheckScreen();
     }
 
 }
@@ -339,7 +339,9 @@ void Controller::automaticIrrigation() { // TODO
                 this->lcd.print("Press to turn it ON");
             }
         }  
-        this->update();
+        if (this->update()) {
+            return;
+        }
     }
     this->automatic_irrigation = automatic;
 

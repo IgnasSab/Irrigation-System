@@ -47,7 +47,9 @@ void loop() {
     bool irrigated = controller.update(); // Make all components up do date 
     if (irrigated == true) {
         controller.printStartingScreen(state, true); // Print menu (starting screen)
+        Serial.println("HERE");
     }
+
 }
 
 
